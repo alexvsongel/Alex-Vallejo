@@ -1,3 +1,4 @@
+import { authClient } from "./lib/auth.js";
 ///---------------CONSTANTES-----------------///
 const alturaRelativaHeader = "10vh";
 const alturaRelativaBody = "85vh";
@@ -74,12 +75,44 @@ function Login() {
     contraseña: "",
   };
 
+  let loading = false;
+  let error = "";
+
   let mostrarContraseña = false;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aquí iría la lógica de autenticación
-    console.log("Datos del formulario:", formData);
+    /*
+     * ESTO ES PARA CREAR LA CUENTA ADMIN
+    await authClient.signUp.email({name: "admin", email: formData.usuario, password: formData.contraseña}, {
+      onRequest: context => {
+        // Mostrar un loader
+      },
+      onSuccess: context => {
+        // Redirigir a la pagina de principal
+        m.route.set("/Inicio");
+      },
+      onError: context => {
+        // Mostrar error
+        alert(context.error.message);
+      }
+    })
+    /*
+     * ESTE ES EL BUENO
+     */
+    await authClient.signIn.email({ email: formData.usuario, password: formData.contraseña }, {
+      onRequest: () => {
+        loading = true;
+        error = "";
+        m.redraw();
+      },
+      onResponse: () => {
+        loading = false;
+        m.redraw();
+      },
+      onSuccess: () => m.route.set("/Inicio"),
+      onError: context => error = context.error.message,
+    })
   };
 
   const handleInputChange = (key, value) => {
@@ -95,6 +128,37 @@ function Login() {
   return {
     oncreate: () => {
       window.scrollTo(0, 0);
+      authClient.useSession.subscribe((miau) => {
+        const { error, data, isPending } = miau;
+        let authenticated = false;
+
+        if (isPending) {
+          return;
+        }
+
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        if (data && data.session) {
+          authenticated = true;
+          console.log(data.user);
+        }
+
+        const currentRoute = m.route.get();
+
+        if (currentRoute === "/Login" && authenticated) {
+          m.route.set("/Inicio")
+          m.redraw();
+        }
+
+        if (currentRoute !== "/Login" && !authenticated) {
+          m.route.set("/Login")
+          m.redraw();
+        }
+      });
+
     },
     view: () => {
       document.body.style.backgroundColor = modoOscuroOff
@@ -337,13 +401,11 @@ function Login() {
                       e.target.style.backgroundColor = "#6a131b";
                       e.target.style.outline = "none";
                       e.target.style.color = "white";
-                    },
-                    onclick: () => {
-                      m.route.set("/Inicio");
-                    },
+                    }
                   },
-                  "Iniciar Sesión"
+                  `${loading ? "Cargando..." : "Iniciar Sesión"}`
                 ),
+                m("p", error)
               ]
             ),
           ]
@@ -355,7 +417,7 @@ function Login() {
 ///-------------------HEADER------------------///
 function Header() {
   return {
-    view: function () {
+    view: function() {
       const currentRoute = m.route.get();
       const enInicio = currentRoute === "/Inicio" || currentRoute === "/Login";
       return m(
@@ -567,6 +629,7 @@ function botonAtras() {
 
 ///-------------------INICIO-------------------///
 function Inicio() {
+
   let datosBtn = [
     {
       icono: "imagenes/calendario.svg",
@@ -602,8 +665,37 @@ function Inicio() {
     },
   ];
   return {
-    oncreate: () => {
+    oncreate: async () => {
       window.scrollTo(0, 0);
+      authClient.useSession.subscribe((miau) => {
+        const { error, data, isPending } = miau;
+        let authenticated = false;
+
+        if (isPending) {
+          return;
+        }
+
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        if (data && data.session) {
+          authenticated = true;
+        }
+
+        const currentRoute = m.route.get();
+
+        if (currentRoute === "/Login" && authenticated) {
+          m.route.set("/Inicio")
+          m.redraw();
+        }
+
+        if (currentRoute !== "/Login" && !authenticated) {
+          m.route.set("/Login")
+          m.redraw();
+        }
+      });
     },
     view: () => {
       return (
@@ -699,12 +791,12 @@ function Inicio() {
                           threshold: 0.01,
                         });
                       },
-                      onmouseleave: function (e) {
+                      onmouseleave: function(e) {
                         (e.target.style.backgroundColor =
                           backgroundColorButton),
                           (e.target.style.transform = "scale(1)");
                       },
-                      onclick: function () {
+                      onclick: function() {
                         m.route.set(btn.slug);
                       },
                     },
@@ -789,7 +881,16 @@ function Inicio() {
                     e.target.style.color = "white";
                   },
                   onclick: () => {
-                    m.route.set("/Login");
+                    authClient.signOut({
+                      fetchOptions: {
+                        onRequest: context => {
+                          console.log(context)
+                        },
+                        onSuccess: () => {
+                          m.route.set("/Login");
+                        },
+                      },
+                    })
                   },
                 },
                 "Cerrar Sesión"
@@ -971,7 +1072,7 @@ function Calendario() {
                 e.target.style.outline = "none";
                 e.target.style.color = "white";
               },
-              onclick: function () {
+              onclick: function() {
                 m.route.set("/AñadirActividad");
               },
             },
@@ -1324,7 +1425,7 @@ function AñadirActividad() {
                     e.target.style.outline = "none";
                     e.target.style.color = "white";
                   },
-                  onclick: function () {
+                  onclick: function() {
                     //Añade la actividad
                   },
                 },
@@ -1500,7 +1601,7 @@ function BuzonDeSugerencias() {
                 e.target.style.outline = "none";
                 e.target.style.color = "white";
               },
-              onclick: function () {
+              onclick: function() {
                 m.route.set("/Sugerencias");
               },
             },
@@ -2057,9 +2158,8 @@ function Sugerencias() {
                     backgroundColor: backgroundColorButton,
                     padding: "20px",
                     borderRadius: "30px",
-                    border: `2px solid ${
-                      modoOscuroOff ? "transparent" : accentColor
-                    }`,
+                    border: `2px solid ${modoOscuroOff ? "transparent" : accentColor
+                      }`,
                     boxShadow: "0 4px 6px rgba(0, 0, 0, 0.3)",
                     cursor: "pointer",
                     outline: "none",
@@ -2286,9 +2386,8 @@ function Documentos() {
                               backgroundColor: backgroundColorButton,
                               padding: "0.8rem 2rem",
                               borderRadius: "30px",
-                              border: `2px solid ${
-                                modoOscuroOff ? "#ccc" : accentColor
-                              }`,
+                              border: `2px solid ${modoOscuroOff ? "#ccc" : accentColor
+                                }`,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -2393,9 +2492,8 @@ function Documentos() {
                     backgroundColor: backgroundColorButton,
                     padding: "20px",
                     borderRadius: "30px",
-                    border: `2px solid ${
-                      modoOscuroOff ? "transparent" : accentColor
-                    }`,
+                    border: `2px solid ${modoOscuroOff ? "transparent" : accentColor
+                      }`,
                     display: "flex",
                     justifyContent: "space-between",
                     boxShadow: "0 4px 6px rgba(0, 0, 0, 0.3)",
