@@ -1,0 +1,26 @@
+{
+  "name": "api",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "format": "prettier . -w",
+    "dev": "tsx watch src/index.js",
+    "migrate": "drizzle-kit migrate",
+    "generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@hono/node-server": "1.14.1",
+    "@neondatabase/serverless": "1.0.0",
+    "better-auth": "1.2.7",
+    "dotenv": "16.5.0",
+    "drizzle-orm": "0.43.1",
+    "hono": "4.7.7",
+    "pg": "8.15.6"
+  },
+  "devDependencies": {
+    "@types/node": "20.11.17",
+    "drizzle-kit": "0.31.0",
+    "prettier": "3.5.3",
+    "tsx": "4.7.1"
+  }
+}
