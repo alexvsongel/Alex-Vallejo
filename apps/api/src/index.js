@@ -36,7 +36,7 @@ app.route('/suggestions', suggestions);
 serve(
   {
     fetch: app.fetch,
-    port: 3000
+    port: process.env.PORT ?? 3000
   },
   info => {
     console.info(`Server is running on http://localhost:${info.port}`);

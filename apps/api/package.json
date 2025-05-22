@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "format": "prettier . -w",
+    "start": "tsx src/index.js",
     "dev": "tsx watch src/index.js",
     "migrate": "drizzle-kit migrate",
     "generate": "drizzle-kit generate"
