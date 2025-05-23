@@ -1,54 +1,18 @@
-import {modoOscuroOff} from '../lib/constants';
+import {modoOscuroOff, fontSizeh3} from '../lib/constants';
 import {Layout} from '../components/layout';
 import {Button} from '../components/button';
-
-function formatearFecha(fechaStr) {
-  // Convertir la cadena a objeto Date
-  const fecha = new Date(fechaStr);
-
-  const dias = [
-    'Domingo',
-    'Lunes',
-    'Martes',
-    'Miércoles',
-    'Jueves',
-    'Viernes',
-    'Sábado'
-  ];
-  const meses = [
-    'Enero',
-    'Febrero',
-    'Marzo',
-    'Abril',
-    'Mayo',
-    'Junio',
-    'Julio',
-    'Agosto',
-    'Septiembre',
-    'Octubre',
-    'Noviembre',
-    'Diciembre'
-  ];
-
-  const diaSemana = dias[fecha.getDay()];
-  const dia = fecha.getDate();
-  const mes = meses[fecha.getMonth()];
-
-  let horas = fecha.getHours();
-  let minutos = fecha.getMinutes();
-  horas = horas < 10 ? '0' + horas : horas;
-  minutos = minutos < 10 ? '0' + minutos : minutos;
-
-  // Formatear la cadena final
-  return `${diaSemana} ${dia} de ${mes} a las ${horas}:${minutos}`;
-}
+import {getSession} from '../lib/auth';
 
 async function getActividades() {
   try {
-    const response = await fetch(`${import.meta.env.API_URL}/calendario`);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/calendar`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const events = await response.json();
-    console.log('Actividades recibidos:', events);
+
     return events;
   } catch (error) {
     console.error('Error fetching actividades:', error);
@@ -58,7 +22,13 @@ async function getActividades() {
 
 export function Calendario() {
   let calendar;
+  let role = 'user';
   return {
+    oninit: async () => {
+      const session = await getSession();
+      role = session.role ?? 'user';
+      m.redraw();
+    },
     oncreate: async () => {
       window.scrollTo(0, 0);
       const calendarEl = document.getElementById('calendar');
@@ -74,23 +44,15 @@ export function Calendario() {
           },
           headerToolbar: {left: '', center: 'title', right: ''},
           footerToolbar: {left: 'today', center: '', right: 'prev,next'},
-          events: await getActividades(),
-          eventClick: info =>
-            console.log(
-              `Actividad: ${info.event.title}\nFecha inicio: ${formatearFecha(
-                info.event.start
-              )}\nFecha fin: ${formatearFecha(info.event.end)}`
-            ),
-          dateClick: info => {
-            const title = prompt('Nueva actividad:');
-            if (title) calendar.addEvent({title, start: info.dateStr});
-          }
+          events: await getActividades()
         });
         calendar.render();
       }
     },
     onremove: () => {
-      if (calendar) calendar.destroy();
+      if (calendar) {
+        calendar.destroy();
+      }
     },
 
     view: () =>
@@ -124,7 +86,19 @@ export function Calendario() {
           }),
           m(
             Button,
-            {onclick: () => m.route.set('/AñadirActividad')},
+            {
+              onclick: () => m.route.set('/AñadirActividad'),
+              style: {
+                fontSize: fontSizeh3,
+                color: 'white',
+                border: 'none',
+                padding: '0.8rem',
+                margin: '2vh auto',
+                borderRadius: '30px',
+                visibility: role === 'admin' ? 'visible' : 'hidden',
+                backgroundColor: '#6a131b'
+              }
+            },
             'Añadir actividad'
           )
         )

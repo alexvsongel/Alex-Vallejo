@@ -15,6 +15,10 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('emailVerified').notNull(),
   image: text('image'),
+  banned: boolean('banned'),
+  banReason: text('banReason'),
+  banExpires: timestamp('banExpires'),
+  role: text('role').default('user'),
   createdAt: timestamp('createdAt', {withTimezone: true}).notNull(),
   updatedAt: timestamp('updatedAt', {withTimezone: true}).notNull()
 });
@@ -25,6 +29,7 @@ export const session = pgTable('session', {
   token: text('token').notNull().unique(),
   createdAt: timestamp('createdAt', {withTimezone: true}).notNull(),
   updatedAt: timestamp('updatedAt', {withTimezone: true}).notNull(),
+  impersonatedBy: text('impersonatedBy'),
   ipAddress: text('ipAddress'),
   userAgent: text('userAgent'),
   userId: text('userId')

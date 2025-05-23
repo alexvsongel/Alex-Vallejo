@@ -4,6 +4,7 @@ import {
   accentColor,
   backgroundColorButton
 } from '../lib/constants';
+import {getSession} from '../lib/auth';
 import {Layout} from '../components/layout';
 import {Button} from '../components/button';
 
@@ -28,9 +29,9 @@ export function AñadirActividad() {
         descripcion: formData.descripcion
       };
 
-      const response = await m.request({
+      await m.request({
         method: 'POST',
-        url: `${import.meta.env.API_URL}/calendario`,
+        url: `${import.meta.env.VITE_API_URL}/calendar`,
         body: actividad
       });
 
@@ -53,6 +54,13 @@ export function AñadirActividad() {
     formData[key] = value;
   };
   return {
+    oninit: async () => {
+      const session = await getSession();
+      if (session.role !== 'admin') {
+        m.route.set('/Inicio');
+        return;
+      }
+    },
     view: () =>
       m(Layout, [
         m(
@@ -105,6 +113,7 @@ export function AñadirActividad() {
               ),
               m('input', {
                 type: 'text',
+                required: true,
                 placeholder: 'Escribe un nombre para tu actividad: ',
                 ariaLabel: 'Escribe aquí un nombre para tu actividad: ',
                 value: formData.titulo,
@@ -146,6 +155,7 @@ export function AñadirActividad() {
                 placeholder: 'Escribe donde quieres hacer tu actividad: ',
                 ariaLabel: 'Escribe aquí la ubicación de tu actividad: ',
                 value: formData.ubicacion,
+                required: true,
                 oninput: e => handleInputChange('ubicacion', e.target.value),
                 style: {
                   width: '100%',
@@ -182,6 +192,7 @@ export function AñadirActividad() {
               m('input', {
                 id: 'fecha',
                 type: 'date',
+                required: true,
                 ariaLabel:
                   'Escribe aquí la fecha de tu actividad con formato día / número de mes / año',
                 value: formData.fecha,
@@ -221,6 +232,7 @@ export function AñadirActividad() {
               m('input', {
                 id: 'horario',
                 type: 'text',
+                required: true,
                 placeholder: 'Formato: 09:00-15:00',
                 ariaLabel:
                   'Escribe aquí qué horario va a tener la actividad con formato hora:minuto-hora:minuto',
@@ -262,8 +274,9 @@ export function AñadirActividad() {
               m('textarea', {
                 id: 'descripcion',
                 name: 'Describe tu actividad: ',
+                required: true,
                 value: formData.descripcion,
-
+                oninput: e => handleInputChange('descripcion', e.target.value),
                 ariaLabel: 'Describe aquí tu actividad',
                 style: {
                   width: '100%',

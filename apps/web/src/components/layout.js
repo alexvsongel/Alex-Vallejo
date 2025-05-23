@@ -5,30 +5,28 @@ import {Header} from './header';
 export const Layout = {
   oncreate: () => {
     // Modo oscuro
-    document.body.style.backgroundColor = modoOscuroOff
-      ? 'white'
-      : blackColor;
+    document.body.style.backgroundColor = modoOscuroOff ? 'white' : blackColor;
 
-      // Arreglar scroll
-      window.scrollTo(0, 0);
+    // Arreglar scroll
+    window.scrollTo(0, 0);
 
     // Checkear session
     authClient.useSession.subscribe(session => {
       const {error, data, isPending} = session;
       let authenticated = false;
 
-      if (!error && !isPending && data?.session) {
+      if (!error && data?.session) {
         authenticated = true;
       }
 
       const currentRoute = m.route.get();
 
-      if (currentRoute === '/Login' && authenticated) {
+      if (currentRoute === '/Login' && authenticated && !isPending) {
         m.route.set('/Inicio');
         m.redraw();
       }
 
-      if (currentRoute !== '/Login' && !authenticated) {
+      if (currentRoute !== '/Login' && !authenticated && !isPending) {
         m.route.set('/Login');
         m.redraw();
       }

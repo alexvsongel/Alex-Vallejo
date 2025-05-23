@@ -1,3 +1,4 @@
+import {admin} from 'better-auth/plugins';
 import {betterAuth} from 'better-auth';
 import {Pool} from 'pg';
 import 'dotenv/config';
@@ -9,5 +10,6 @@ export const auth = betterAuth({
   trustedOrigins: ['http://localhost:5174', 'https://alex-vallejo.vercel.app'],
   emailAndPassword: {
     enabled: true
-  }
+  },
+  plugins: [admin()]
 });

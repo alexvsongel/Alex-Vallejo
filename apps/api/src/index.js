@@ -11,6 +11,7 @@ import {suggestions} from './routes/suggestions';
 
 const app = new Hono();
 
+// Better Auth
 app.use(
   '/api/auth/*',
   cors({
@@ -27,11 +28,13 @@ app.on(['GET', 'POST'], '/api/auth/*', c => {
   return auth.handler(c.req.raw);
 });
 
+/*Upload thing
+ */
+
 app.get('/', c => c.text('Bienvenido a la api!!'));
 app.route('/calendar', calendar);
 app.route('/documents', documents);
 app.route('/suggestions', suggestions);
-// app.route("/authentication", authentication);
 
 serve(
   {
